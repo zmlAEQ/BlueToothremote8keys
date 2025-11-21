@@ -324,24 +324,14 @@ class BluetoothLeManager(private val context: Context) {
             characteristic?.value?.let { data ->
                 android.util.Log.d("BluetoothLeManager", "接收到数据: ${data.joinToString(" ") { "0x%02X".format(it) }}")
                 _receivedData.value = data
-                
-                // 处理接收数据
+                // 新协议 3 字节帧 0xFF + high + low，避免将 0xFF 误判为断开
+                if (handleNewProtocolFrame(data)) {
+                    return
+                }
+                // 旧逻辑保留为兼容，不再对 0xFF 做断开处理
                 if (data.isNotEmpty()) {
                     val responseCode = data[0].toInt() and 0xFF
                     android.util.Log.d("BluetoothLeManager", "收到数据: 0x${"%02X".format(responseCode)}")
-                    
-                    when (responseCode) {
-                        0xFF -> {
-                            android.util.Log.d("BluetoothLeManager", "收到断开信号 0xFF")
-                            if (_connectionState.value == ConnectionState.CONNECTED) {
-                                _connectionState.value = ConnectionState.DISCONNECTED
-                            }
-                        }
-                        else -> {
-                            // 模块不会发送认证响应，所有数据都是正常的遥控数据
-                            android.util.Log.d("BluetoothLeManager", "收到遥控数据: 0x${"%02X".format(responseCode)}")
-                        }
-                    }
                 }
             }
         }
@@ -548,5 +538,41 @@ class BluetoothLeManager(private val context: Context) {
         stopScanning()
         disconnect()
         coroutineScope.cancel()
+    }
+
+    /**
+     * 处理新协议 3 字节帧：0xFF + high + low。
+     * 返回 true 表示已处理，避免走旧逻辑。
+     */
+    private fun handleNewProtocolFrame(data: ByteArray): Boolean {
+        if (data.size < 3) return false
+        if ((data[0].toInt() and 0xFF) != 0xFF) return false
+
+        val high = data[1].toInt() and 0xFF
+        val low = data[2].toInt() and 0xFF
+
+        // 状态帧处理（不触发误断开）
+        when {
+            high == 0x00 && low == 0x0A -> {
+                // 模块通知连接成功
+                _connectionState.value = ConnectionState.CONNECTED
+            }
+            high == 0x00 && low == 0x0B -> {
+                // 模块通知断开
+                _connectionState.value = ConnectionState.DISCONNECTED
+            }
+            high == 0xFF && low == 0x0C -> {
+                // 密码正确
+                _errorMessage.value = "密码正确"
+            }
+            high == 0xFF && low == 0x0D -> {
+                // 密码错误
+                _errorMessage.value = "密码错误"
+            }
+            else -> {
+                // 其他帧（包括键值 0xFF xx xx、释放 0xFF 00 00）仅记录即可
+            }
+        }
+        return true
     }
 }

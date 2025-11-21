@@ -33,6 +33,7 @@ import com.example.bluetoothremote.password.PasswordManager
 import com.example.bluetoothremote.ui.screens.PasswordChangeScreen
 import com.example.bluetoothremote.ui.screens.DeviceManagementScreen
 import com.example.bluetoothremote.ui.components.RemoteControllerView
+import com.example.bluetoothremote.ui.components.RemoteLayoutMode
 import com.example.bluetoothremote.ui.screens.DeviceScanScreen
 import androidx.compose.runtime.collectAsState
 import com.example.bluetoothremote.ui.components.StatusIndicator
@@ -169,6 +170,7 @@ fun MainScreen(
     val uiState by viewModel.uiState.collectAsState()
     var showDeviceManagement by remember { mutableStateOf(false) }
     var showPasswordChange by remember { mutableStateOf(false) }
+    var layoutMode by remember { mutableStateOf(RemoteLayoutMode.SIX_KEYS) }
 
     Column(
         modifier = modifier
@@ -201,7 +203,8 @@ fun MainScreen(
                     isEnabled = true,
                     onKeyPressed = { key -> viewModel.onKeyPressed(key) },
                     onKeyReleased = { key -> viewModel.onKeyReleased(key) },
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    layoutMode = layoutMode
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 
@@ -262,8 +265,31 @@ fun MainScreen(
                     isLearningMode = uiState.isLearningMode,
                     batteryLevel = uiState.batteryLevel
                 )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // 布局切换：6/8/16 键
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    FilterChip(
+                        selected = layoutMode == RemoteLayoutMode.SIX_KEYS,
+                        onClick = { layoutMode = RemoteLayoutMode.SIX_KEYS },
+                        label = { Text("6键") }
+                    )
+                    FilterChip(
+                        selected = layoutMode == RemoteLayoutMode.EIGHT_KEYS,
+                        onClick = { layoutMode = RemoteLayoutMode.EIGHT_KEYS },
+                        label = { Text("8键") }
+                    )
+                    FilterChip(
+                        selected = layoutMode == RemoteLayoutMode.SIXTEEN_KEYS,
+                        onClick = { layoutMode = RemoteLayoutMode.SIXTEEN_KEYS },
+                        label = { Text("16键") }
+                    )
+                }
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 Button(
                     onClick = { showDeviceManagement = true },
                     modifier = Modifier.fillMaxWidth()
@@ -273,31 +299,33 @@ fun MainScreen(
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 // 测试遥控器按钮
+                // ???????
+                                // ???????
                 var showTestRemote by remember { mutableStateOf(false) }
-                
+
                 if (showTestRemote) {
-                    // 纯净的全屏遥控器界面
+                    // ??????????
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(MaterialTheme.colorScheme.background)
                     ) {
-                        // 纯净遥控器界面
+                        // ???????
                         RemoteControllerView(
                             isEnabled = true,
-                            onKeyPressed = { key -> 
-                                // 可以在这里添加测试日志
-                                println("按下键: $key")
+                            onKeyPressed = { key ->
+                                println("??: $key")
                             },
-                            onKeyReleased = { key -> 
-                                println("释放键: $key")
+                            onKeyReleased = { key ->
+                                println("??: $key")
                             },
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(24.dp)
+                                .padding(24.dp),
+                            layoutMode = layoutMode
                         )
-                        
-                        // 右上角小返回按钮
+
+                        // ????????
                         Button(
                             onClick = { showTestRemote = false },
                             modifier = Modifier
@@ -308,7 +336,7 @@ fun MainScreen(
                                 containerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.7f)
                             )
                         ) {
-                            Text("×", fontSize = 18.sp)
+                            Text("?", fontSize = 18.sp)
                         }
                     }
                 } else {
@@ -317,13 +345,12 @@ fun MainScreen(
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
                     ) {
-                        Text("🎮 测试遥控器界面")
+                        Text("???????")
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
-                DeviceScanScreen(
+DeviceScanScreen(
                     devices = uiState.scannedDevices,
                     isScanning = uiState.isScanning,
                     passwordManager = PasswordManager(LocalContext.current),

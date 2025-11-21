@@ -32,7 +32,8 @@ fun RemoteControllerView(
     isEnabled: Boolean,
     onKeyPressed: (String) -> Unit,
     onKeyReleased: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    layoutMode: RemoteLayoutMode = RemoteLayoutMode.SIX_KEYS
 ) {
     val hapticFeedback = LocalHapticFeedback.current
     var isLightOn by remember { mutableStateOf(false) }
@@ -51,43 +52,75 @@ fun RemoteControllerView(
                 .padding(16.dp)
         )
         
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            // 十字方向键区域
-            DirectionKeysLayout(
-                isEnabled = isEnabled,
-                onKeyPressed = { key ->
-                    pressedKeys = pressedKeys + key
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onKeyPressed(key)
-                },
-                onKeyReleased = { key ->
-                    pressedKeys = pressedKeys - key
-                    onKeyReleased(key)
+        when (layoutMode) {
+            RemoteLayoutMode.SIX_KEYS -> {
+                SixKeyLayout(
+                    isEnabled = isEnabled,
+                    onKeyPressed = { key ->
+                        pressedKeys = pressedKeys + key
+                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onKeyPressed(key)
+                    },
+                    onKeyReleased = { key ->
+                        pressedKeys = pressedKeys - key
+                        onKeyReleased(key)
+                    }
+                )
+            }
+            RemoteLayoutMode.EIGHT_KEYS -> {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    DirectionKeysLayout(
+                        isEnabled = isEnabled,
+                        onKeyPressed = { key ->
+                            pressedKeys = pressedKeys + key
+                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onKeyPressed(key)
+                        },
+                        onKeyReleased = { key ->
+                            pressedKeys = pressedKeys - key
+                            onKeyReleased(key)
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.height(80.dp))
+
+                    FunctionKeysLayout(
+                        isEnabled = isEnabled,
+                        onKeyPressed = { key ->
+                            pressedKeys = pressedKeys + key
+                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                            onKeyPressed(key)
+                        },
+                        onKeyReleased = { key ->
+                            pressedKeys = pressedKeys - key
+                            onKeyReleased(key)
+                        }
+                    )
                 }
-            )
-        
-            Spacer(modifier = Modifier.height(80.dp))
-            
-            // 功能键区域
-            FunctionKeysLayout(
-                isEnabled = isEnabled,
-                onKeyPressed = { key ->
-                    pressedKeys = pressedKeys + key
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                    onKeyPressed(key)
-                },
-                onKeyReleased = { key ->
-                    pressedKeys = pressedKeys - key
-                    onKeyReleased(key)
-                }
-            )
+            }
+            RemoteLayoutMode.SIXTEEN_KEYS -> {
+                SixteenKeyLayout(
+                    isEnabled = isEnabled,
+                    onKeyPressed = { key ->
+                        pressedKeys = pressedKeys + key
+                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onKeyPressed(key)
+                    },
+                    onKeyReleased = { key ->
+                        pressedKeys = pressedKeys - key
+                        onKeyReleased(key)
+                    }
+                )
+            }
         }
     }
 }
+
+enum class RemoteLayoutMode { SIX_KEYS, EIGHT_KEYS, SIXTEEN_KEYS }
 
 @Composable
 private fun DirectionKeysLayout(
@@ -680,5 +713,224 @@ private fun CustomIconButton(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun SixKeyLayout(
+    isEnabled: Boolean,
+    onKeyPressed: (String) -> Unit,
+    onKeyReleased: (String) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        // 上
+        TriangleKeyButton(
+            key = "K1",
+            direction = TriangleDirection.UP,
+            isEnabled = isEnabled,
+            onKeyPressed = onKeyPressed,
+            onKeyReleased = onKeyReleased,
+            modifier = Modifier.size(80.dp)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 左 中 右
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            TriangleKeyButton(
+                key = "K3",
+                direction = TriangleDirection.LEFT,
+                isEnabled = isEnabled,
+                onKeyPressed = onKeyPressed,
+                onKeyReleased = onKeyReleased,
+                modifier = Modifier.size(80.dp)
+            )
+
+            Spacer(modifier = Modifier.width(40.dp))
+
+            TriangleKeyButton(
+                key = "K4",
+                direction = TriangleDirection.RIGHT,
+                isEnabled = isEnabled,
+                onKeyPressed = onKeyPressed,
+                onKeyReleased = onKeyReleased,
+                modifier = Modifier.size(80.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 下
+        TriangleKeyButton(
+            key = "K2",
+            direction = TriangleDirection.DOWN,
+            isEnabled = isEnabled,
+            onKeyPressed = onKeyPressed,
+            onKeyReleased = onKeyReleased,
+            modifier = Modifier.size(80.dp)
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // 两个功能键
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(32.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            RoundFunctionKey(
+                key = "K5",
+                label = "OK",
+                isEnabled = isEnabled,
+                onKeyPressed = onKeyPressed,
+                onKeyReleased = onKeyReleased
+            )
+            RoundFunctionKey(
+                key = "K6",
+                label = "Back",
+                isEnabled = isEnabled,
+                onKeyPressed = onKeyPressed,
+                onKeyReleased = onKeyReleased
+            )
+        }
+    }
+}
+
+@Composable
+private fun SixteenKeyLayout(
+    isEnabled: Boolean,
+    onKeyPressed: (String) -> Unit,
+    onKeyReleased: (String) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        DirectionKeysLayout(
+            isEnabled = isEnabled,
+            onKeyPressed = onKeyPressed,
+            onKeyReleased = onKeyReleased
+        )
+
+        Spacer(modifier = Modifier.height(48.dp))
+
+        FunctionKeysLayout(
+            isEnabled = isEnabled,
+            onKeyPressed = onKeyPressed,
+            onKeyReleased = onKeyReleased
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // 额外的 8 个键 K9-K16
+        AdditionalKeyGrid(
+            keys = listOf("K9", "K10", "K11", "K12"),
+            isEnabled = isEnabled,
+            onKeyPressed = onKeyPressed,
+            onKeyReleased = onKeyReleased
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        AdditionalKeyGrid(
+            keys = listOf("K13", "K14", "K15", "K16"),
+            isEnabled = isEnabled,
+            onKeyPressed = onKeyPressed,
+            onKeyReleased = onKeyReleased
+        )
+    }
+}
+
+@Composable
+private fun AdditionalKeyGrid(
+    keys: List<String>,
+    isEnabled: Boolean,
+    onKeyPressed: (String) -> Unit,
+    onKeyReleased: (String) -> Unit
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        keys.forEach { key ->
+            RoundFunctionKey(
+                key = key,
+                label = key,
+                isEnabled = isEnabled,
+                onKeyPressed = onKeyPressed,
+                onKeyReleased = onKeyReleased,
+                modifier = Modifier
+                    .weight(1f)
+            )
+        }
+    }
+}
+
+@Composable
+private fun RoundFunctionKey(
+    key: String,
+    label: String,
+    isEnabled: Boolean,
+    onKeyPressed: (String) -> Unit,
+    onKeyReleased: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var isPressed by remember { mutableStateOf(false) }
+    val interactionSource = remember { MutableInteractionSource() }
+
+    LaunchedEffect(interactionSource) {
+        interactionSource.interactions.collect { interaction ->
+            when (interaction) {
+                is PressInteraction.Press -> {
+                    if (!isPressed) {
+                        isPressed = true
+                        onKeyPressed(key)
+                    }
+                }
+                is PressInteraction.Release,
+                is PressInteraction.Cancel -> {
+                    if (isPressed) {
+                        isPressed = false
+                        onKeyReleased(key)
+                    }
+                }
+            }
+        }
+    }
+
+    val bg = when {
+        !isEnabled -> Color.Gray
+        isPressed -> MaterialTheme.colorScheme.secondary.copy(alpha = 0.8f)
+        else -> MaterialTheme.colorScheme.secondary
+    }
+
+    Box(
+        modifier = modifier
+            .size(88.dp)
+            .clip(CircleShape)
+            .background(bg)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                enabled = isEnabled
+            ) { },
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = label,
+            color = Color.White,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
